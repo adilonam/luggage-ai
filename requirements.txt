@@ -1,0 +1,2 @@
+# Core data science and AI libraries
+numpy
