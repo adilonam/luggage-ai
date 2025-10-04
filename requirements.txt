@@ -1,2 +1,9 @@
-# Core data science and AI libraries
-numpy
+#python 3.12
+streamlit>=1.28.0
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+git+https://github.com/openai/CLIP.git
+Pillow>=9.0.0
+faiss-cpu>=1.7.4
+numpy>=1.21.0
