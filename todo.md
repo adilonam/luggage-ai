@@ -1,0 +1,5 @@
+- [ ] website to frensh
+- [ ] deploy on ovh
+- [ ] admin part 
+- [ ] db of not known photos
+- [ ] recomandation photo piece valise
