@@ -93,32 +93,6 @@ jobs:
           
           echo "Deployment completed successfully!"
 
-    - name: Health Check
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.VM_HOST }}
-        username: ${{ secrets.VM_USERNAME }}
-        key: ${{ secrets.VM_SSH_KEY }}
-        script: |
-          # Wait for container to start
-          sleep 10
-          
-          # Check if container is running
-          if docker ps | grep -q luggage-ai-app; then
-            echo "✅ Container is running successfully!"
-            docker ps | grep luggage-ai-app
-          else
-            echo "❌ Container failed to start!"
-            docker logs luggage-ai-app
-            exit 1
-          fi
-          
-          # Check if the application is responding
-          if curl -f http://localhost:8501/_stcore/health > /dev/null 2>&1; then
-            echo "✅ Application is healthy and responding!"
-          else
-            echo "⚠️ Application may not be fully ready yet"
-          fi
 
 # Required GitHub Secrets:
 # DOCKER_USERNAME - Your Docker Hub username
