@@ -28,5 +28,8 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install -r requirements.txt
 
-# Set the default command
-CMD ["/bin/bash"]
+# Expose Streamlit port
+EXPOSE 8501
+
+# Set the default command to run Streamlit
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
