@@ -1,0 +1,12 @@
+# Cursor Rules for luggage-ai
+
+## Project Overview
+This is a luggage-ai project. Follow these guidelines when working on this codebase.
+
+## Code Style
+- Use Python 3.12
+- Follow PEP 8 style guidelines
+- Use type hints where appropriate
+- Write clear, descriptive variable and function names
+- Add docstrings for functions and classes
+
