@@ -10,7 +10,7 @@ from PIL import Image
 
 # Page configuration
 st.set_page_config(
-    page_title="Luggage AI - Image Similarity Search",
+    page_title="Luggage AI - Recherche de Similarité d'Images",
     page_icon="🧳",
     layout="wide"
 )
@@ -63,7 +63,7 @@ def build_faiss_index():
 
     dataset_path = "dataset/"
     if not os.path.exists(dataset_path):
-        st.error(f"Dataset path '{dataset_path}' not found!")
+        st.error(f"Chemin du dataset '{dataset_path}' introuvable!")
         return None, None
 
     progress_bar = st.progress(0)
@@ -75,7 +75,7 @@ def build_faiss_index():
 
     for idx, id_article in enumerate(folders):
         folder = os.path.join(dataset_path, id_article)
-        status_text.text(f"Processing folder: {id_article}")
+        status_text.text(f"Traitement du dossier: {id_article}")
 
         for file in os.listdir(folder):
             if file.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff')):
@@ -88,12 +88,13 @@ def build_faiss_index():
                     embeddings.append(emb)
                     ids.append(id_article)
                 except Exception as e:
-                    st.warning(f"Error processing {image_path}: {str(e)}")
+                    st.warning(
+                        f"Erreur lors du traitement de {image_path}: {str(e)}")
 
         progress_bar.progress((idx + 1) / total_folders)
 
     if not embeddings:
-        st.error("No valid images found in dataset!")
+        st.error("Aucune image valide trouvée dans le dataset!")
         return None, None
 
     embeddings = np.vstack(embeddings).astype("float32")
@@ -102,82 +103,64 @@ def build_faiss_index():
     index = faiss.IndexFlatL2(embeddings.shape[1])
     index.add(embeddings)
 
-    status_text.text("Index built successfully!")
+    status_text.text("Index construit avec succès!")
     progress_bar.empty()
     status_text.empty()
 
     return index, ids
 
 
-def calculate_similarity_scores(distances):
-    """Convert distances to similarity scores (0-1 scale)"""
-    # Normalize distances to 0-1 scale where 1 is most similar
-    max_distance = max(distances)
-    min_distance = min(distances)
-
-    if max_distance == min_distance:
-        return [1.0] * len(distances)
-
-    similarities = []
-    for dist in distances:
-        # Invert and normalize: closer to 0 distance = higher similarity
-        similarity = 1 - (dist - min_distance) / (max_distance - min_distance)
-        similarities.append(similarity)
-
-    return similarities
-
-
 def main():
     # Header
-    st.markdown('<h1 class="main-header">🧳 Luggage AI - Image Similarity Search</h1>',
+    st.markdown('<h1 class="main-header">🧳 Luggage AI - Recherche de Similarité d&apos;Images </h1>',
                 unsafe_allow_html=True)
     st.markdown("---")
 
     # Sidebar for controls
     with st.sidebar:
-        st.header("Settings")
-        num_results = st.slider("Number of similar results", 1, 10, 3)
+        st.header("Paramètres")
+        num_results = st.slider("Nombre de résultats similaires", 1, 10, 3)
         st.markdown("---")
         st.markdown("### Instructions")
-        st.markdown("1. Upload an image using the file uploader")
-        st.markdown("2. The app will find the most similar luggage articles")
-        st.markdown("3. Results are ranked by similarity score")
+        st.markdown("1. Téléchargez une image en utilisant le sélecteur de fichiers")
+        st.markdown("2. L'application trouvera les articles de bagage les plus similaires")
+        st.markdown("3. Les résultats sont classés par score de similarité")
 
     # Initialize session state
     if 'index' not in st.session_state or 'ids' not in st.session_state:
-        st.info("🔄 Building similarity index from dataset... This may take a moment.")
-        with st.spinner("Loading model and building index..."):
+        st.info("🔄 Construction de l'index de similarité à partir du dataset... Cela peut prendre un moment.")
+        with st.spinner("Chargement du modèle et construction de l'index..."):
             index, ids = build_faiss_index()
             if index is not None:
                 st.session_state.index = index
                 st.session_state.ids = ids
-                st.success("✅ Index built successfully!")
+                st.success("✅ Index construit avec succès!")
             else:
-                st.error("❌ Failed to build index. Please check your dataset.")
+                st.error("❌ Échec de la construction de l'index. Veuillez vérifier votre dataset.")
                 return
 
     # Main content area
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        st.header("📸 Upload Image")
+        st.header("📸 Télécharger une Image")
         uploaded_file = st.file_uploader(
-            "Choose an image file",
+            "Choisir un fichier image",
             type=['png', 'jpg', 'jpeg', 'bmp', 'tiff'],
-            help="Upload an image to find similar luggage articles"
+            help="Téléchargez une image pour trouver des articles de bagage similaires"
         )
 
         if uploaded_file is not None:
             # Display uploaded image
             image = Image.open(uploaded_file)
-            st.image(image, caption="Uploaded Image", use_column_width=True)
+            st.image(image, caption="Image téléchargée", use_container_width=True)
 
     with col2:
-        st.header("🔍 Search Results")
+        st.header("🔍 Résultats de Recherche")
 
         if uploaded_file is not None:
-            if st.button("🔍 Find Similar Articles", type="primary"):
-                with st.spinner("Analyzing image and finding similar articles..."):
+            if st.button("🔍 Trouver des Articles Similaires", type="primary"):
+                with st.spinner("Analyse de l'image et recherche d'articles similaires..."):
                     # Load model
                     model, preprocess, device = load_model()
 
@@ -190,51 +173,70 @@ def main():
                         with torch.no_grad():
                             q_emb = model.encode_image(query_img).cpu().numpy()
 
-                        # Search for similar images
-                        D, I = st.session_state.index.search(
-                            q_emb, num_results)
+                        # Search for similar images - Get more results to ensure we get unique article IDs
+                        # Search more results
+                        search_k = min(50, len(st.session_state.ids))
+                        D, I = st.session_state.index.search(q_emb, search_k)
 
-                        # Calculate similarity scores
-                        distances = D[0].tolist()
-                        similarities = calculate_similarity_scores(distances)
+                        # Get unique article IDs with their best scores
+                        unique_results = {}
+                        for i in range(search_k):
+                            article_id = st.session_state.ids[I[0][i]]
+                            distance = D[0][i]
+
+                            # Keep only the best (lowest distance) for each article ID
+                            if article_id not in unique_results or distance < unique_results[article_id]['distance']:
+                                unique_results[article_id] = {
+                                    'distance': distance,
+                                    'index': i
+                                }
+
+                        # Sort by distance (lower is better) and take top results
+                        sorted_results = sorted(unique_results.items(
+                        ), key=lambda x: x[1]['distance'])[:num_results]
 
                         # Display results
-                        st.markdown("### 🎯 Most Similar Articles")
+                        st.markdown("### 🎯 Articles les plus similaires")
                         st.markdown("---")
 
-                        for i in range(num_results):
-                            article_id = st.session_state.ids[I[0][i]]
-                            distance = distances[i]
-                            similarity = similarities[i]
+                        for i, (article_id, result_info) in enumerate(sorted_results):
+                            distance = result_info['distance']
+                            # Convert L2 distance to similarity score (lower distance = higher similarity)
+                            # Using negative distance as similarity score (higher is better)
+                            similarity_score = -distance
 
                             # Create result card
                             with st.container():
                                 st.markdown(f"""
                                 <div class="similarity-card">
-                                    <div class="article-id">#{i+1} Article ID: {article_id}</div>
-                                    <div class="similarity-score">Similarity: {similarity:.1%}</div>
+                                    <div class="article-id">#{i+1} ID Article: {article_id}</div>
+                                    <div class="similarity-score">Score de similarité: {similarity_score:.4f}</div>
                                     <div>Distance: {distance:.4f}</div>
                                 </div>
                                 """, unsafe_allow_html=True)
 
                         # Summary
                         st.markdown("---")
-                        st.markdown(
-                            f"**Best Match:** {st.session_state.ids[I[0][0]]} with {similarities[0]:.1%} similarity")
+                        if sorted_results:
+                            best_article_id = sorted_results[0][0]
+                            best_distance = sorted_results[0][1]['distance']
+                            best_similarity = -best_distance
+                            st.markdown(
+                                f"**Meilleur match:** {best_article_id} avec un score de similarité de {best_similarity:.4f}")
 
                     except Exception as e:
-                        st.error(f"Error processing image: {str(e)}")
+                        st.error(f"Erreur lors du traitement de l'image: {str(e)}")
         else:
-            st.info("👆 Please upload an image to get started")
+            st.info("👆 Veuillez télécharger une image pour commencer")
 
     # Footer
     st.markdown("---")
-    st.markdown("### 📊 Dataset Information")
+    st.markdown("### 📊 Informations sur le Dataset")
     if 'ids' in st.session_state:
         unique_articles = len(set(st.session_state.ids))
         total_images = len(st.session_state.ids)
-        st.metric("Total Articles", unique_articles)
-        st.metric("Total Images", total_images)
+        st.metric("Total des Articles", unique_articles)
+        st.metric("Total des Images", total_images)
 
 
 if __name__ == "__main__":

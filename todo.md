@@ -1,5 +1,8 @@
-- [ ] website to frensh
-- [ ] deploy on ovh
+- [x] website to frensh
+- [x] deploy on ovh
 - [ ] admin part 
 - [ ] db of not known photos
 - [ ] recomandation photo piece valise
+- [ ] two link for probability
+- [ ] si image est mauvaise il doit reprendre la photo
+- [ ] si img n est pas reconnu le client laisse son email
