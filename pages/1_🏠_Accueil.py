@@ -135,7 +135,7 @@ def build_faiss_index():
 
 def main():
     # Header
-    st.markdown('<h1 class="main-header">🧳 Luggage AI - Recherche de Similarité d&apos;Images </h1>',
+    st.markdown('<h1 class="main-header">🧳 Valise IA - Recherche de Similarité d&apos;Images </h1>',
                 unsafe_allow_html=True)
     st.markdown("---")
 

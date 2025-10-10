@@ -13,8 +13,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# Set sidebar title
-st.sidebar.title("🧳 Luggage AI")
 
 # Custom CSS for better styling
 st.markdown("""

@@ -10,7 +10,7 @@ st.set_page_config(
 # Welcome message
 st.markdown("""
 <div style="text-align: center; padding: 4rem 2rem;">
-    <h1 style="color: #1f77b4; font-size: 4rem; margin-bottom: 2rem;">🧳 Luggage AI</h1>
+    <h1 style="color: #1f77b4; font-size: 4rem; margin-bottom: 2rem;">🧳 Valise IA</h1>
     <p style="font-size: 1.5rem; color: #666; margin-bottom: 3rem;">
         Application de recherche de similarité d'images pour articles de bagage
     </p>
