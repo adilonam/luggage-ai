@@ -8,7 +8,7 @@ from PIL import Image
 
 # Page configuration
 st.set_page_config(
-    page_title="Luggage AI - Administration",
+    page_title="Valise IA - Administration",
     page_icon="⚙️",
     layout="wide"
 )

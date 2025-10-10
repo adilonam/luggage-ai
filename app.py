@@ -2,7 +2,7 @@ import streamlit as st
 
 # Page configuration
 st.set_page_config(
-    page_title="Luggage AI - Recherche de Similarité d'Images",
+    page_title="Valise IA - Recherche de Similarité d'Images",
     page_icon="🧳",
     layout="wide"
 )
