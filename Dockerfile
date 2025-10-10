@@ -1,5 +1,5 @@
-# Use the official Python 3.12 image as base
-FROM mcr.microsoft.com/devcontainers/python:3.12
+# Use the official lightweight Python 3.12 image as base
+FROM python:3.12-slim
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
