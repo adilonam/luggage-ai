@@ -1,3 +1,4 @@
+import json
 import os
 import time
 
@@ -7,6 +8,13 @@ import numpy as np
 import streamlit as st
 import torch
 from PIL import Image
+
+# Page configuration
+st.set_page_config(
+    page_title="Luggage AI - Recherche de Similarité d'Images",
+    page_icon="🧳",
+    layout="wide"
+)
 
 # Custom CSS for better styling
 st.markdown("""
@@ -24,7 +32,7 @@ st.markdown("""
         margin: 0.5rem 0;
         border-left: 5px solid #1f77b4;
     }
-    .similarity-score {
+    .metadata {
         font-size: 1.2rem;
         font-weight: bold;
         color: #2e8b57;
@@ -44,6 +52,28 @@ def load_model():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, preprocess = clip.load("ViT-B/32", device=device)
     return model, preprocess, device
+
+
+def load_metadata():
+    """Load metadata from JSON file"""
+    metadata_path = "dataset/metadata.json"
+    if os.path.exists(metadata_path):
+        try:
+            with open(metadata_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            st.error(f"Erreur lors du chargement du metadata: {str(e)}")
+            return []
+    return []
+
+
+def get_article_urls(article_id):
+    """Get URLs for a specific article from metadata"""
+    metadata = load_metadata()
+    for entry in metadata:
+        if entry["label"] == article_id:
+            return entry.get("url-roulette", "Non trouvé"), entry.get("url-kit", "Non trouvé")
+    return "Non trouvé", "Non trouvé"
 
 
 @st.cache_data
@@ -215,17 +245,19 @@ def main():
 
                         for i, (article_id, result_info) in enumerate(sorted_results):
                             distance = result_info['distance']
-                            # Convert L2 distance to similarity score (lower distance = higher similarity)
-                            # Using negative distance as similarity score (higher is better)
-                            similarity_score = -distance
+
+                            # Get URLs from metadata
+                            url_roulette, url_kit = get_article_urls(
+                                article_id)
 
                             # Create result card
                             with st.container():
                                 st.markdown(f"""
                                 <div class="similarity-card">
                                     <div class="article-id">#{i+1} ID Article: {article_id}</div>
-                                    <div class="similarity-score">Score de similarité: {similarity_score:.4f}</div>
-                                    <div>Distance: {distance:.4f}</div>
+                                    <div class="metadata">Distance: {distance:.4f}</div>
+                                    <div class="metadata">URL Roulette: {url_roulette}</div>
+                                    <div class="metadata">URL Kit: {url_kit}</div>
                                 </div>
                                 """, unsafe_allow_html=True)
 
@@ -234,9 +266,8 @@ def main():
                         if sorted_results:
                             best_article_id = sorted_results[0][0]
                             best_distance = sorted_results[0][1]['distance']
-                            best_similarity = -best_distance
                             st.markdown(
-                                f"**Meilleur match:** {best_article_id} avec un score de similarité de {best_similarity:.4f}")
+                                f"**Meilleur match:** {best_article_id} avec une distance de {best_distance:.4f}")
 
                     except Exception as e:
                         st.error(
