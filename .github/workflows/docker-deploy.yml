@@ -72,7 +72,7 @@ jobs:
           docker run -d \
             --name luggage-ai-app \
             --restart unless-stopped \
-            -p 8501:8501 \
+            -p 80:8501 \
             -v /opt/luggage-ai/dataset:/workspace/dataset \
             -e STREAMLIT_SERVER_PORT=8501 \
             -e STREAMLIT_SERVER_ADDRESS=0.0.0.0 \
