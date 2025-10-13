@@ -236,6 +236,7 @@ def main():
 
     with col1:
         st.header("📸 Télécharger une Image")
+
         uploaded_file = st.file_uploader(
             "Choisir un fichier image",
             type=['png', 'jpg', 'jpeg', 'bmp', 'tiff'],
@@ -247,6 +248,32 @@ def main():
             image = Image.open(uploaded_file)
             st.image(image, caption="Image téléchargée",
                      use_container_width=True)
+        # Instructions for taking good photos
+        st.warning("""
+        **📷 Comment prendre une bonne photo :**
+        
+        • Placez l'article sur un **fond uni** (blanc, gris ou coloré)
+        • Assurez-vous que l'article est **bien éclairé**
+        • Prenez la photo de **face** et de **profil**
+        • L'article doit être **net et visible** dans l'image
+        • Évitez les reflets et les ombres importantes
+        """)
+
+        # Button to show/hide example
+        if st.button("📋 Voir un exemple de bonne photo", type="secondary", use_container_width=True):
+            st.session_state.show_example = not st.session_state.get(
+                'show_example', False)
+
+        # Show example image if button was clicked
+        if st.session_state.get('show_example', False):
+            try:
+                example_image = Image.open("sample/good.jpg")
+                st.image(
+                    example_image, caption="Exemple de bonne photo - Article sur fond uni", use_container_width=True)
+                st.info(
+                    "💡 Cette photo montre un bon exemple : article bien visible sur fond uni, éclairage correct.")
+            except FileNotFoundError:
+                st.warning("⚠️ Fichier d'exemple non trouvé.")
 
     with col2:
         st.header("🔍 Résultats de Recherche")
@@ -303,12 +330,16 @@ def main():
 
                             # Create result card
                             with st.container():
+                                # Create clickable URLs
+                                roulette_link = f'<a href="{url_roulette}" target="_blank" style="color: #1f77b4; text-decoration: none;">{url_roulette}</a>' if url_roulette != "Non trouvé" else "Non trouvé"
+                                kit_link = f'<a href="{url_kit}" target="_blank" style="color: #1f77b4; text-decoration: none;">{url_kit}</a>' if url_kit != "Non trouvé" else "Non trouvé"
+
                                 st.markdown(f"""
                                 <div class="similarity-card">
                                     <div class="article-id">#{i+1} ID Article: {article_id}</div>
                                     <div class="metadata">Distance: {distance:.4f}</div>
-                                    <div class="metadata">URL Roulette: {url_roulette}</div>
-                                    <div class="metadata">URL Kit: {url_kit}</div>
+                                    <div class="metadata">URL Roulette: {roulette_link}</div>
+                                    <div class="metadata">URL Kit: {kit_link}</div>
                                 </div>
                                 """, unsafe_allow_html=True)
 

@@ -1,11 +1,10 @@
 import streamlit as st
 
-# Page configuration to hide from sidebar
+# Page configuration
 st.set_page_config(
-    page_title="🔧 Vous ne savez pas quelle roulette, cadenas, poignée correspond à votre valise ?",
-    page_icon="🔧",
-    layout="wide",
-    initial_sidebar_state="collapsed"
+    page_title="Valise IA",
+    page_icon="🧳",
+    layout="wide"
 )
 
 # Redirect directly to Accueil page

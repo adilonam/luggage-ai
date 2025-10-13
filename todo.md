@@ -11,8 +11,8 @@
 - [x] add passs on admin
 - [ ] liinker domain avec certificat valide
 - [ ] cas non similarite , reprendre photo laisser adresse mail obj echec similarite 
-- [ ] responsive
-- [ ] space help client to take photo 
-- [ ] index supprime 
+- [x] responsive
+- [x] space help client to take photo 
+- [x] index supprime 
 - [?] supprimer image on add 
-- [ ] direct access to app
+- [x] direct access to app
