@@ -204,6 +204,30 @@ def main():
 
     st.markdown("---")
 
+    # Create New Article Section
+    st.markdown("#### 🆕 Créer un Nouvel Article")
+
+    new_article_id = st.text_input(
+        "Nouvel ID d'article",
+        placeholder="Ex: R999",
+        help="Entrez un nouvel ID d'article (ex: R999)"
+    )
+
+    if new_article_id:
+        if st.button("📁 Créer l'Article", type="secondary"):
+            article_path = os.path.join("dataset", new_article_id)
+            try:
+                if os.path.exists(article_path):
+                    st.error(f"❌ L'article {new_article_id} existe déjà!")
+                else:
+                    os.makedirs(article_path)
+                    st.success(f"✅ Article {new_article_id} créé avec succès!")
+                    time.sleep(2)  # Wait 2 seconds to show the message
+                    st.rerun()
+            except Exception as e:
+                st.error(f"❌ Erreur lors de la création: {str(e)}")
+    st.markdown("---")
+
     # Add Images Section
     st.markdown("#### ➕ Ajouter des Images")
 
@@ -244,10 +268,105 @@ def main():
 
     st.markdown("---")
 
+    # Add/Edit Metadata
+    st.markdown("#### ➕ Ajouter/Modifier des Métadonnées")
+
+    col1, col2 = st.columns([1, 1])
+
+    with col1:
+        # Add new metadata
+        st.markdown("**Ajouter une nouvelle entrée :**")
+        new_label = st.text_input(
+            "Label", placeholder="Ex: R999", key="new_label")
+        new_url_roulette = st.text_input(
+            "URL Roulette", placeholder="https://roulette.r999", key="new_roulette")
+        new_url_kit = st.text_input(
+            "URL Kit", placeholder="https://kit.r999", key="new_kit")
+
+        if st.button("➕ Ajouter Métadonnée", key="add_metadata"):
+            if new_label and new_url_roulette and new_url_kit:
+                if add_metadata_entry(new_label, new_url_roulette, new_url_kit):
+                    st.success(
+                        f"✅ Métadonnée {new_label} ajoutée avec succès!")
+                    time.sleep(2)
+                    st.rerun()
+                else:
+                    st.error("❌ Erreur lors de l'ajout de la métadonnée.")
+            else:
+                st.error("❌ Veuillez remplir tous les champs.")
+
+    with col2:
+        # Edit existing metadata
+        metadata = load_metadata()
+        if metadata:
+            st.markdown("**Modifier une entrée existante :**")
+            edit_label = st.selectbox("Sélectionner à modifier", [
+                                      entry['label'] for entry in metadata], key="edit_select")
+
+            if edit_label:
+                # Find the entry to edit
+                edit_entry = next(
+                    (entry for entry in metadata if entry['label'] == edit_label), None)
+                if edit_entry:
+                    edit_new_label = st.text_input(
+                        "Nouveau Label", value=edit_entry['label'], key="edit_label")
+                    edit_new_roulette = st.text_input(
+                        "Nouvelle URL Roulette", value=edit_entry['url-roulette'], key="edit_roulette")
+                    edit_new_kit = st.text_input(
+                        "Nouvelle URL Kit", value=edit_entry['url-kit'], key="edit_kit")
+
+                    if st.button("✏️ Modifier Métadonnée", key="edit_metadata"):
+                        if edit_new_label and edit_new_roulette and edit_new_kit:
+                            if update_metadata_entry(edit_label, edit_new_label, edit_new_roulette, edit_new_kit):
+                                st.success(
+                                    f"✅ Métadonnée {edit_label} modifiée avec succès!")
+                                time.sleep(2)
+                                st.rerun()
+                            else:
+                                st.error(
+                                    "❌ Erreur lors de la modification de la métadonnée.")
+                        else:
+                            st.error("❌ Veuillez remplir tous les champs.")
+        else:
+            st.info("📭 Aucune métadonnée à modifier.")
+
+    st.markdown("---")
+
+    # Metadata Management Section
+    st.markdown("#### 📋 Gestion des Métadonnées")
+
+    metadata = load_metadata()
+
+    # Display current metadata
+    if metadata:
+        st.markdown("**Métadonnées actuelles :**")
+        for i, entry in enumerate(metadata):
+            col1, col2, col3, col4 = st.columns([2, 3, 3, 1])
+            with col1:
+                st.text(f"Label: {entry['label']}")
+            with col2:
+                st.text(f"Roulette: {entry['url-roulette']}")
+            with col3:
+                st.text(f"Kit: {entry['url-kit']}")
+            with col4:
+                if st.button("🗑️", key=f"del_meta_{i}_{entry['label']}", help="Supprimer cette entrée"):
+                    if delete_metadata_entry_by_index(i):
+                        st.success(f"✅ Métadonnée {entry['label']} supprimée!")
+                        time.sleep(2)
+                        st.rerun()
+                    else:
+                        st.error(
+                            f"❌ Erreur lors de la suppression de {entry['label']}")
+    else:
+        st.info("📭 Aucune métadonnée trouvée.")
+
+    st.markdown("---")
+
     # Remove Images Section
     st.markdown("#### 🗑️ Supprimer des Images")
 
     # Select article for deletion
+    article_ids = list(dataset_structure.keys())
     selected_article_del = st.selectbox(
         "Sélectionner un article pour supprimer des images",
         article_ids,
@@ -292,29 +411,6 @@ def main():
                             f"❌ Erreur lors du chargement de {image_name}: {str(e)}")
 
     st.markdown("---")
-    # Create New Article Section
-    st.markdown("#### 🆕 Créer un Nouvel Article")
-
-    new_article_id = st.text_input(
-        "Nouvel ID d'article",
-        placeholder="Ex: R999",
-        help="Entrez un nouvel ID d'article (ex: R999)"
-    )
-
-    if new_article_id:
-        if st.button("📁 Créer l'Article", type="secondary"):
-            article_path = os.path.join("dataset", new_article_id)
-            try:
-                if os.path.exists(article_path):
-                    st.error(f"❌ L'article {new_article_id} existe déjà!")
-                else:
-                    os.makedirs(article_path)
-                    st.success(f"✅ Article {new_article_id} créé avec succès!")
-                    time.sleep(2)  # Wait 2 seconds to show the message
-                    st.rerun()
-            except Exception as e:
-                st.error(f"❌ Erreur lors de la création: {str(e)}")
-    st.markdown("---")
 
     # Delete Entire Article Section
     st.markdown("#### 🗂️ Supprimer un Article Complet")
@@ -352,97 +448,6 @@ def main():
                             f"❌ Erreur lors de la suppression de l'article {selected_article_delete}")
     else:
         st.info("📭 Aucun article disponible pour la suppression.")
-    st.markdown("---")
-    # Metadata Management Section
-    st.markdown("#### 📋 Gestion des Métadonnées")
-
-    metadata = load_metadata()
-
-    # Display current metadata
-    if metadata:
-        st.markdown("**Métadonnées actuelles :**")
-        for i, entry in enumerate(metadata):
-            col1, col2, col3, col4 = st.columns([2, 3, 3, 1])
-            with col1:
-                st.text(f"Label: {entry['label']}")
-            with col2:
-                st.text(f"Roulette: {entry['url-roulette']}")
-            with col3:
-                st.text(f"Kit: {entry['url-kit']}")
-            with col4:
-                if st.button("🗑️", key=f"del_meta_{i}_{entry['label']}", help="Supprimer cette entrée"):
-                    if delete_metadata_entry_by_index(i):
-                        st.success(f"✅ Métadonnée {entry['label']} supprimée!")
-                        time.sleep(2)
-                        st.rerun()
-                    else:
-                        st.error(
-                            f"❌ Erreur lors de la suppression de {entry['label']}")
-    else:
-        st.info("📭 Aucune métadonnée trouvée.")
-
-    st.markdown("---")
-
-    # Add/Edit Metadata
-    st.markdown("#### ➕ Ajouter/Modifier des Métadonnées")
-
-    col1, col2 = st.columns([1, 1])
-
-    with col1:
-        # Add new metadata
-        st.markdown("**Ajouter une nouvelle entrée :**")
-        new_label = st.text_input(
-            "Label", placeholder="Ex: R999", key="new_label")
-        new_url_roulette = st.text_input(
-            "URL Roulette", placeholder="https://roulette.r999", key="new_roulette")
-        new_url_kit = st.text_input(
-            "URL Kit", placeholder="https://kit.r999", key="new_kit")
-
-        if st.button("➕ Ajouter Métadonnée", key="add_metadata"):
-            if new_label and new_url_roulette and new_url_kit:
-                if add_metadata_entry(new_label, new_url_roulette, new_url_kit):
-                    st.success(
-                        f"✅ Métadonnée {new_label} ajoutée avec succès!")
-                    time.sleep(2)
-                    st.rerun()
-                else:
-                    st.error("❌ Erreur lors de l'ajout de la métadonnée.")
-            else:
-                st.error("❌ Veuillez remplir tous les champs.")
-
-    with col2:
-        # Edit existing metadata
-        if metadata:
-            st.markdown("**Modifier une entrée existante :**")
-            edit_label = st.selectbox("Sélectionner à modifier", [
-                                      entry['label'] for entry in metadata], key="edit_select")
-
-            if edit_label:
-                # Find the entry to edit
-                edit_entry = next(
-                    (entry for entry in metadata if entry['label'] == edit_label), None)
-                if edit_entry:
-                    edit_new_label = st.text_input(
-                        "Nouveau Label", value=edit_entry['label'], key="edit_label")
-                    edit_new_roulette = st.text_input(
-                        "Nouvelle URL Roulette", value=edit_entry['url-roulette'], key="edit_roulette")
-                    edit_new_kit = st.text_input(
-                        "Nouvelle URL Kit", value=edit_entry['url-kit'], key="edit_kit")
-
-                    if st.button("✏️ Modifier Métadonnée", key="edit_metadata"):
-                        if edit_new_label and edit_new_roulette and edit_new_kit:
-                            if update_metadata_entry(edit_label, edit_new_label, edit_new_roulette, edit_new_kit):
-                                st.success(
-                                    f"✅ Métadonnée {edit_label} modifiée avec succès!")
-                                time.sleep(2)
-                                st.rerun()
-                            else:
-                                st.error(
-                                    "❌ Erreur lors de la modification de la métadonnée.")
-                        else:
-                            st.error("❌ Veuillez remplir tous les champs.")
-        else:
-            st.info("📭 Aucune métadonnée à modifier.")
 
     # Footer
     st.markdown("---")

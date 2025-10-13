@@ -10,8 +10,8 @@ from PIL import Image
 
 # Page configuration
 st.set_page_config(
-    page_title="Valise IA - Recherche de Similarité d'Images",
-    page_icon="🧳",
+    page_title="🔧 Vous ne savez pas quelle roulette, cadenas, poignée correspond à votre valise ?",
+    page_icon="🔧",
     layout="wide"
 )
 
@@ -40,6 +40,20 @@ st.markdown("""
         font-size: 1.5rem;
         font-weight: bold;
         color: #1f77b4;
+    }
+    
+    /* Responsive design for mobile devices */
+    @media (max-width: 768px) {
+        .main-header {
+            font-size: 2rem !important;
+            margin-bottom: 1rem !important;
+        }
+    }
+    @media (max-width: 480px) {
+        .main-header {
+            font-size: 1.5rem !important;
+            margin-bottom: 0.8rem !important;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -141,8 +155,33 @@ def build_faiss_index():
 
 def main():
     # Header
-    st.markdown('<h1 class="main-header">🧳 Valise IA - Recherche de Similarité d&apos;Images </h1>',
+    st.markdown('<h1 class="main-header">🔧 Vous ne savez pas quelle roulette, cadenas, poignée correspond à votre valise ?</h1>',
                 unsafe_allow_html=True)
+
+    # Description
+    st.markdown("""
+    <style>
+    @media (max-width: 768px) {
+        .description-box {
+            font-size: 1rem !important;
+            padding: 1rem !important;
+            margin: 1rem 0 !important;
+        }
+    }
+    @media (max-width: 480px) {
+        .description-box {
+            font-size: 0.9rem !important;
+            padding: 0.8rem !important;
+        }
+    }
+    </style>
+    <div class="description-box" style="text-align: center; font-size: 1.2rem; color: #2e8b57; margin: 2rem 0; padding: 1.5rem; background-color: #f0f8f0; border-radius: 10px; border-left: 5px solid #2e8b57;">
+        <strong>Télécharger une photo : notre IA s'occupe du reste !</strong><br><br>
+        En quelques secondes, vous obtiendrez les modèles compatibles ou les kits de Réparations à commander sur notre site <strong><a href="https://jereparemonbagage.com" target="_blank" style="color: #1f77b4; text-decoration: none;">Jereparemonbagage.com</a></strong><br><br>
+        <em>Réparer sa valise au lieu de la jeter, c'est possible !</em>
+    </div>
+    """, unsafe_allow_html=True)
+
     st.markdown("---")
 
     # Sidebar for controls

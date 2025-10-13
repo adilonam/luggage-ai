@@ -14,5 +14,5 @@
 - [ ] responsive
 - [ ] space help client to take photo 
 - [ ] index supprime 
-- [ ] supprimer image on add 
+- [?] supprimer image on add 
 - [ ] direct access to app
