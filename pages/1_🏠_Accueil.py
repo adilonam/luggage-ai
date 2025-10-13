@@ -330,9 +330,14 @@ def main():
 
                             # Create result card
                             with st.container():
-                                # Create clickable URLs
-                                roulette_link = f'<a href="{url_roulette}" target="_blank" style="color: #1f77b4; text-decoration: none;">{url_roulette}</a>' if url_roulette != "Non trouvé" else "Non trouvé"
-                                kit_link = f'<a href="{url_kit}" target="_blank" style="color: #1f77b4; text-decoration: none;">{url_kit}</a>' if url_kit != "Non trouvé" else "Non trouvé"
+                                # Create clickable URLs with truncated display
+                                roulette_display = url_roulette[:30] + "..." if len(
+                                    url_roulette) > 30 and url_roulette != "Non trouvé" else url_roulette
+                                kit_display = url_kit[:30] + "..." if len(
+                                    url_kit) > 30 and url_kit != "Non trouvé" else url_kit
+
+                                roulette_link = f'<a href="{url_roulette}" target="_blank" style="color: #1f77b4; text-decoration: none;" title="{url_roulette}">{roulette_display}</a>' if url_roulette != "Non trouvé" else "Non trouvé"
+                                kit_link = f'<a href="{url_kit}" target="_blank" style="color: #1f77b4; text-decoration: none;" title="{url_kit}">{kit_display}</a>' if url_kit != "Non trouvé" else "Non trouvé"
 
                                 st.markdown(f"""
                                 <div class="similarity-card">
