@@ -1,6 +1,5 @@
 import json
 import os
-import time
 
 import clip
 import faiss
@@ -76,6 +75,14 @@ def get_article_urls(article_id):
     return "Non trouvé", "Non trouvé"
 
 
+def get_dataset_folders():
+    """Get list of folders in dataset directory"""
+    dataset_path = "dataset/"
+    if not os.path.exists(dataset_path):
+        return []
+    return [f for f in os.listdir(dataset_path) if os.path.isdir(os.path.join(dataset_path, f))]
+
+
 @st.cache_data
 def build_faiss_index():
     """Build FAISS index from dataset images"""
@@ -92,8 +99,7 @@ def build_faiss_index():
     progress_bar = st.progress(0)
     status_text = st.empty()
 
-    folders = [f for f in os.listdir(dataset_path) if os.path.isdir(
-        os.path.join(dataset_path, f))]
+    folders = get_dataset_folders()
     total_folders = len(folders)
 
     for idx, id_article in enumerate(folders):
@@ -124,7 +130,7 @@ def build_faiss_index():
 
     # Build FAISS index
     index = faiss.IndexFlatL2(embeddings.shape[1])
-    index.add(embeddings)
+    index.add(embeddings)  # type: ignore
 
     status_text.text("Index construit avec succès!")
     progress_bar.empty()
@@ -148,13 +154,17 @@ def main():
         # Rebuild index button
         st.markdown("### 🔧 Maintenance")
         if st.button("🔄 Reconstruire l'Index", type="secondary", use_container_width=True):
-            # Clear the cached index
+            # Clear all cached data
             if 'index' in st.session_state:
                 del st.session_state.index
             if 'ids' in st.session_state:
                 del st.session_state.ids
+
+            # Clear the cached build_faiss_index function
+            build_faiss_index.clear()
+
             st.success(
-                "✅ Index supprimé du cache. Il sera reconstruit automatiquement.")
+                "✅ Cache vidé. L'index sera reconstruit automatiquement.")
             st.rerun()
 
         st.markdown("---")
@@ -167,7 +177,7 @@ def main():
         st.markdown(
             "4. Utilisez 'Reconstruire l'Index' après avoir modifié le dataset")
 
-    # Initialize session state
+    # Initialize session state - only build index if not already cached
     if 'index' not in st.session_state or 'ids' not in st.session_state:
         st.info(
             "🔄 Construction de l'index de similarité à partir du dataset... Cela peut prendre un moment.")
@@ -220,7 +230,9 @@ def main():
                         # Search for similar images - Get more results to ensure we get unique article IDs
                         # Search more results
                         search_k = min(50, len(st.session_state.ids))
-                        D, I = st.session_state.index.search(q_emb, search_k)
+                        # FAISS search returns distances and indices
+                        D, I = st.session_state.index.search(
+                            q_emb.astype('float32'), search_k)  # type: ignore
 
                         # Get unique article IDs with their best scores
                         unique_results = {}
@@ -283,6 +295,13 @@ def main():
         total_images = len(st.session_state.ids)
         st.metric("Total des Articles", unique_articles)
         st.metric("Total des Images", total_images)
+
+        # Show current dataset folders for debugging
+        with st.expander("🔍 Dossiers actuels du dataset"):
+            current_folders = get_dataset_folders()
+            st.write("**Dossiers détectés:**", sorted(current_folders))
+            st.write(
+                "**Note:** Cliquez sur 'Reconstruire l'Index' après avoir modifié le dataset")
 
 
 if __name__ == "__main__":

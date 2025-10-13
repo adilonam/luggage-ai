@@ -8,10 +8,11 @@
 - [x] si img n est pas reconnu le client laisse son email
 
 
-- [ ] add passs on admin
+- [x] add passs on admin
 - [ ] liinker domain avec certificat valide
 - [ ] cas non similarite , reprendre photo laisser adresse mail obj echec similarite 
 - [ ] responsive
 - [ ] space help client to take photo 
 - [ ] index supprime 
 - [ ] supprimer image on add 
+- [ ] direct access to app

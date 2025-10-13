@@ -6,7 +6,11 @@ This is a luggage-ai project. Follow these guidelines when working on this codeb
 ## Language Requirements
 - **Streamlit App Content**: All user-facing content in the Streamlit application must be in French (fr)
 
-## Code Style
+
+
+
+## Rules
 - Use clear, descriptive variable names
 - Add comments for complex logic
 - Follow Python PEP 8 style guidelines
+- dont create markdown files
