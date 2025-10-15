@@ -1,6 +1,8 @@
 {
   "name": "luggage-ai Python Dev Container",
-  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "dockerComposeFile": "./docker-compose.yml",
+  "service": "luggage-ai",
+  "workspaceFolder": "/workspace",
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
@@ -36,6 +38,7 @@
   },
   "forwardPorts": [
     8501,
+    80,
     8888
   ],
   "postCreateCommand": "pip install --upgrade pip && pip install -r requirements.txt",
