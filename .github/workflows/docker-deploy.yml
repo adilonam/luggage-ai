@@ -30,16 +30,16 @@ jobs:
           git rebase origin/main || git rebase origin/master
           
           # Stop existing containers
-          docker-compose down || true
+          docker compose down || true
           
           # Build and start the services
-          docker-compose up -d --build
+          docker compose up -d --build
           
           # Clean up old images and containers
           docker system prune -f
           
           # Show running containers
-          docker-compose ps
+          docker compose ps
           
           echo "Deployment completed successfully!"
 
