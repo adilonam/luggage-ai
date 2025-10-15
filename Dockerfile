@@ -1,4 +1,4 @@
-# Use the official lightweight Python 3.12 image as base
+# Use the official Python 3.12 image as base
 FROM python:3.12-slim
 
 # Set environment variables
@@ -6,17 +6,12 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
 # Set the working directory
-WORKDIR /workspace
+WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
     curl \
-    wget \
-    vim \
-    nano \
-    htop \
-    tree \
     && rm -rf /var/lib/apt/lists/*
 
 # Upgrade pip and install common Python packages
@@ -28,10 +23,10 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install -r requirements.txt
 
-# Copy the application code
+# Copy application code
 COPY . .
 
-# Expose the port that Streamlit runs on
+# Expose Streamlit port
 EXPOSE 8501
 
 # Set the default command to run Streamlit

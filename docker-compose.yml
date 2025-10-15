@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  luggage-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: luggage-ai-prod
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+    volumes:
+      - ./dataset:/app/dataset
+    networks:
+      - luggage-prod-network
+
+
+  nginx:
+    image: nginx:alpine
+    container_name: luggage-ai-nginx-prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx-prod.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - luggage-ai
+    networks:
+      - luggage-prod-network
+
+networks:
+  luggage-prod-network:
+    driver: bridge
