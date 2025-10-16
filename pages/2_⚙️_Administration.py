@@ -3,7 +3,11 @@ import os
 import shutil
 import time
 
+import clip
+import faiss
+import numpy as np
 import streamlit as st
+import torch
 from PIL import Image
 
 # Page configuration
@@ -168,11 +172,183 @@ def delete_metadata_entry_by_index(index):
     return False
 
 
+def load_app_config():
+    """Load application configuration from JSON file"""
+    config_path = "./dataset/app_config.json"
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            st.error(f"Erreur lors du chargement de la configuration: {str(e)}")
+            return {"num_results": 3, "rebuild_index": False, "admin_password": ""}
+    return {"num_results": 3, "rebuild_index": False, "admin_password": ""}
+
+
+def save_app_config(config):
+    """Save application configuration to JSON file"""
+    config_path = "./dataset/app_config.json"
+    try:
+        with open(config_path, 'w', encoding='utf-8') as f:
+            json.dump(config, f, indent=4, ensure_ascii=False)
+        return True
+    except Exception as e:
+        st.error(f"Erreur lors de la sauvegarde de la configuration: {str(e)}")
+        return False
+
+
+@st.cache_resource
+def load_model():
+    """Load CLIP model and return model, preprocess function, and device"""
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, preprocess = clip.load("ViT-B/32", device=device)
+    return model, preprocess, device
+
+
+@st.cache_data
+def build_faiss_index():
+    """Build FAISS index from dataset images"""
+    model, preprocess, device = load_model()
+
+    embeddings = []
+    ids = []
+
+    dataset_path = "dataset/"
+    if not os.path.exists(dataset_path):
+        st.error(f"Chemin du dataset '{dataset_path}' introuvable!")
+        return None, None
+
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+
+    # Get all article directories
+    article_dirs = [f for f in os.listdir(dataset_path) 
+                   if os.path.isdir(os.path.join(dataset_path, f))]
+
+    total_articles = len(article_dirs)
+    processed_articles = 0
+
+    for article_id in article_dirs:
+        article_path = os.path.join(dataset_path, article_id)
+        images = [f for f in os.listdir(article_path) 
+                 if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff'))]
+
+        for image_name in images:
+            image_path = os.path.join(article_path, image_name)
+            try:
+                # Load and preprocess image
+                image = Image.open(image_path).convert('RGB')
+                image_tensor = preprocess(image).unsqueeze(0).to(device)
+
+                # Encode image
+                with torch.no_grad():
+                    embedding = model.encode_image(image_tensor).cpu().numpy()
+                    embeddings.append(embedding.flatten())
+                    ids.append(f"{article_id}/{image_name}")
+
+            except Exception as e:
+                st.warning(f"Erreur lors du traitement de {image_path}: {str(e)}")
+
+        processed_articles += 1
+        progress = processed_articles / total_articles
+        progress_bar.progress(progress)
+        status_text.text(f"Traitement de l'article {article_id} ({processed_articles}/{total_articles})")
+
+    if not embeddings:
+        st.error("Aucune image valide trouvée dans le dataset!")
+        return None, None
+
+    # Build FAISS index
+    embeddings_array = np.array(embeddings).astype('float32')
+    dimension = embeddings_array.shape[1]
+    
+    index = faiss.IndexFlatL2(dimension)
+    index.add(embeddings_array)
+
+    progress_bar.empty()
+    status_text.empty()
+
+    return index, ids
+
+
 def main():
-    # Header
+    # Load configuration
+    config = load_app_config()
+    admin_password = config.get('admin_password', '')
+    
+    # Check if password is set
+    if admin_password:
+        # Password is set, require authentication
+        if 'admin_authenticated' not in st.session_state:
+            st.session_state.admin_authenticated = False
+        
+        if not st.session_state.admin_authenticated:
+            # Show login form
+            st.markdown('<h1 class="main-header">⚙️ Administration</h1>',
+                        unsafe_allow_html=True)
+            st.markdown("---")
+            
+            st.markdown("### 🔐 Authentification Requise")
+            entered_password = st.text_input("Mot de passe administrateur", type="password")
+            
+            if st.button("Se connecter", type="primary"):
+                if entered_password == admin_password:
+                    st.session_state.admin_authenticated = True
+                    st.success("✅ Authentification réussie!")
+                    st.rerun()
+                else:
+                    st.error("❌ Mot de passe incorrect!")
+            
+            st.markdown("---")
+            st.info("💡 Si vous avez oublié le mot de passe, supprimez le fichier `./dataset/app_config.json` et recréez-le.")
+            return
+    
+    # Header (only shown when authenticated)
     st.markdown('<h1 class="main-header">⚙️ Administration</h1>',
                 unsafe_allow_html=True)
     st.markdown("---")
+
+    # Sidebar for maintenance controls
+    with st.sidebar:
+        st.header("🔧 Paramètres")
+        st.markdown("---")
+        
+        # Number of similar results slider
+        # Load persistent config
+        config = load_app_config()
+        previous_value = config.get('num_results', 3)
+        
+        num_results = st.slider("Nombre de résultats similaires", 1, 10, previous_value, key='num_results_slider')
+        
+        # Store the value in session state and persistent config if changed
+        if num_results != previous_value:
+            st.session_state.num_results = num_results
+            config['num_results'] = num_results
+            if save_app_config(config):
+                st.success(f"✅ Nombre de résultats mis à jour: {num_results}")
+            else:
+                st.error("❌ Erreur lors de la sauvegarde de la configuration")
+        else:
+            st.session_state.num_results = num_results
+        st.markdown("---")
+        
+        # Rebuild index button
+        if st.button("🔄 Reconstruire l'Index", type="secondary", use_container_width=True):
+            # Set rebuild flag in config to trigger rebuild on Accueil page
+            config = load_app_config()
+            config['rebuild_index'] = True
+            if save_app_config(config):
+                st.success("✅ L'index sera reconstruit automatiquement sur la page d'accueil.")
+            else:
+                st.error("❌ Erreur lors de la sauvegarde de la configuration de reconstruction.")
+            st.rerun()
+        
+        st.markdown("---")
+        
+        # Logout button
+        if st.button("🚪 Se déconnecter", type="secondary", use_container_width=True):
+            st.session_state.admin_authenticated = False
+            st.rerun()
 
     # Dataset Management Section
     st.markdown("### 📁 Gestion du Dataset")
@@ -185,22 +361,7 @@ def main():
             "📂 Aucun dataset trouvé. Le dossier 'dataset' est vide ou n'existe pas.")
         return
 
-    # Display current structure
-    st.markdown("#### 📊 Structure actuelle du dataset")
-
-    col1, col2 = st.columns([2, 1])
-
-    with col1:
-        st.markdown("**Articles disponibles :**")
-        for article_id, images in dataset_structure.items():
-            st.markdown(f"• **{article_id}** : {len(images)} image(s)")
-
-    with col2:
-        total_articles = len(dataset_structure)
-        total_images = sum(len(images)
-                           for images in dataset_structure.values())
-        st.metric("Total Articles", total_articles)
-        st.metric("Total Images", total_images)
+    
 
     st.markdown("---")
 
@@ -449,10 +610,62 @@ def main():
     else:
         st.info("📭 Aucun article disponible pour la suppression.")
 
-    # Footer
     st.markdown("---")
-    st.markdown("### ⚠️ Avertissement")
-    st.warning("Les modifications apportées au dataset affecteront les résultats de recherche. Assurez-vous de sauvegarder vos données importantes.")
+
+    # Password Management Section
+    st.markdown("### 🔐 Gestion du Mot de Passe")
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        st.markdown("**Changer le mot de passe :**")
+        new_password = st.text_input("Nouveau mot de passe", type="password", key="new_pass")
+        confirm_password = st.text_input("Confirmer le nouveau mot de passe", type="password", key="confirm_pass")
+        
+        if st.button("🔑 Changer le Mot de Passe", key="change_password"):
+            if not new_password or not confirm_password:
+                st.error("❌ Veuillez remplir tous les champs.")
+            elif new_password != confirm_password:
+                st.error("❌ Les mots de passe ne correspondent pas.")
+            else:
+                config['admin_password'] = new_password
+                if save_app_config(config):
+                    st.success("✅ Mot de passe modifié avec succès!")
+                    st.rerun()
+                else:
+                    st.error("❌ Erreur lors de la sauvegarde du mot de passe.")
+    
+    with col2:
+        st.markdown("**Supprimer le mot de passe :**")
+        st.warning("⚠️ Supprimer le mot de passe rendra la page d'administration accessible à tous.")
+        
+        if st.button("🗑️ Supprimer le Mot de Passe", key="remove_password"):
+            config['admin_password'] = ""
+            if save_app_config(config):
+                st.success("✅ Mot de passe supprimé. La page est maintenant accessible sans authentification.")
+                st.session_state.admin_authenticated = False
+                st.rerun()
+            else:
+                st.error("❌ Erreur lors de la suppression du mot de passe.")
+    
+    st.markdown("---")
+
+    # Display current structure at the very bottom
+    st.markdown("#### 📊 Structure actuelle du dataset")
+
+    col1, col2 = st.columns([2, 1])
+
+    with col1:
+        st.markdown("**Articles disponibles :**")
+        for article_id, images in dataset_structure.items():
+            st.markdown(f"• **{article_id}** : {len(images)} image(s)")
+
+    with col2:
+        total_articles = len(dataset_structure)
+        total_images = sum(len(images)
+                           for images in dataset_structure.values())
+        st.metric("Total Articles", total_articles)
+        st.metric("Total Images", total_images)
 
 
 if __name__ == "__main__":
