@@ -19,3 +19,11 @@
 
 
 - [x] VERIFY metadata on change
+
+- [ ] migrate reindex to admin
+- [ ] add password to admin
+- [ ] nombre similarite sur admin
+- [ ] lien contact  si la piece ne correspant pas
+- [ ] dataset en dessous
+- [ ] model entrainer sur 1056
+- [ ] si la photo ne corspond pas lien fiverr 
