@@ -331,7 +331,7 @@ def main():
                             # Create result card
                             with st.container():
                                 # Create clickable URLs with truncated display
-                                roulette_display = url_roulette[:30] + "..." if len(
+                                roulette_display = url_roulette[:40] + "..." if len(
                                     url_roulette) > 30 and url_roulette != "Non trouvé" else url_roulette
                                 kit_display = url_kit[:30] + "..." if len(
                                     url_kit) > 30 and url_kit != "Non trouvé" else url_kit
@@ -343,8 +343,8 @@ def main():
                                 <div class="similarity-card">
                                     <div class="article-id">#{i+1} ID Article: {article_id}</div>
                                     <div class="metadata">Distance: {distance:.4f}</div>
-                                    <div class="metadata">URL Roulette: {roulette_link}</div>
-                                    <div class="metadata">URL Kit: {kit_link}</div>
+                                    <div class="metadata">Lien Roulette: {roulette_link}</div>
+                                    <div class="metadata">Lien Kit: {kit_link}</div>
                                 </div>
                                 """, unsafe_allow_html=True)
 

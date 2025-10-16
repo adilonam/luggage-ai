@@ -16,3 +16,6 @@
 - [x] index supprime 
 - [?] supprimer image on add 
 - [x] direct access to app
+
+
+- [x] VERIFY metadata on change

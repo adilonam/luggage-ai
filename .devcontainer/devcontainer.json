@@ -36,11 +36,6 @@
       }
     }
   },
-  "forwardPorts": [
-    8501,
-    80,
-    8888
-  ],
   "postCreateCommand": "pip install --upgrade pip && pip install -r requirements.txt",
   "remoteUser": "vscode"
 }
