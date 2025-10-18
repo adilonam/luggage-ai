@@ -180,7 +180,8 @@ def load_app_config():
             with open(config_path, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except Exception as e:
-            st.error(f"Erreur lors du chargement de la configuration: {str(e)}")
+            st.error(
+                f"Erreur lors du chargement de la configuration: {str(e)}")
             return {"num_results": 3, "rebuild_index": False, "admin_password": ""}
     return {"num_results": 3, "rebuild_index": False, "admin_password": ""}
 
@@ -222,16 +223,16 @@ def build_faiss_index():
     status_text = st.empty()
 
     # Get all article directories
-    article_dirs = [f for f in os.listdir(dataset_path) 
-                   if os.path.isdir(os.path.join(dataset_path, f))]
+    article_dirs = [f for f in os.listdir(dataset_path)
+                    if os.path.isdir(os.path.join(dataset_path, f))]
 
     total_articles = len(article_dirs)
     processed_articles = 0
 
     for article_id in article_dirs:
         article_path = os.path.join(dataset_path, article_id)
-        images = [f for f in os.listdir(article_path) 
-                 if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff'))]
+        images = [f for f in os.listdir(article_path)
+                  if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff'))]
 
         for image_name in images:
             image_path = os.path.join(article_path, image_name)
@@ -247,12 +248,14 @@ def build_faiss_index():
                     ids.append(f"{article_id}/{image_name}")
 
             except Exception as e:
-                st.warning(f"Erreur lors du traitement de {image_path}: {str(e)}")
+                st.warning(
+                    f"Erreur lors du traitement de {image_path}: {str(e)}")
 
         processed_articles += 1
         progress = processed_articles / total_articles
         progress_bar.progress(progress)
-        status_text.text(f"Traitement de l'article {article_id} ({processed_articles}/{total_articles})")
+        status_text.text(
+            f"Traitement de l'article {article_id} ({processed_articles}/{total_articles})")
 
     if not embeddings:
         st.error("Aucune image valide trouvée dans le dataset!")
@@ -261,7 +264,7 @@ def build_faiss_index():
     # Build FAISS index
     embeddings_array = np.array(embeddings).astype('float32')
     dimension = embeddings_array.shape[1]
-    
+
     index = faiss.IndexFlatL2(dimension)
     index.add(embeddings_array)
 
@@ -275,22 +278,23 @@ def main():
     # Load configuration
     config = load_app_config()
     admin_password = config.get('admin_password', '')
-    
+
     # Check if password is set
     if admin_password:
         # Password is set, require authentication
         if 'admin_authenticated' not in st.session_state:
             st.session_state.admin_authenticated = False
-        
+
         if not st.session_state.admin_authenticated:
             # Show login form
             st.markdown('<h1 class="main-header">⚙️ Administration</h1>',
                         unsafe_allow_html=True)
             st.markdown("---")
-            
+
             st.markdown("### 🔐 Authentification Requise")
-            entered_password = st.text_input("Mot de passe administrateur", type="password")
-            
+            entered_password = st.text_input(
+                "Mot de passe administrateur", type="password")
+
             if st.button("Se connecter", type="primary"):
                 if entered_password == admin_password:
                     st.session_state.admin_authenticated = True
@@ -298,11 +302,12 @@ def main():
                     st.rerun()
                 else:
                     st.error("❌ Mot de passe incorrect!")
-            
+
             st.markdown("---")
-            st.info("💡 Si vous avez oublié le mot de passe, supprimez le fichier `./dataset/app_config.json` et recréez-le.")
+            st.info(
+                "💡 Si vous avez oublié le mot de passe, supprimez le fichier `./dataset/app_config.json` et recréez-le.")
             return
-    
+
     # Header (only shown when authenticated)
     st.markdown('<h1 class="main-header">⚙️ Administration</h1>',
                 unsafe_allow_html=True)
@@ -312,14 +317,15 @@ def main():
     with st.sidebar:
         st.header("🔧 Paramètres")
         st.markdown("---")
-        
+
         # Number of similar results slider
         # Load persistent config
         config = load_app_config()
         previous_value = config.get('num_results', 3)
-        
-        num_results = st.slider("Nombre de résultats similaires", 1, 10, previous_value, key='num_results_slider')
-        
+
+        num_results = st.slider(
+            "Nombre de résultats similaires", 1, 10, previous_value, key='num_results_slider')
+
         # Store the value in session state and persistent config if changed
         if num_results != previous_value:
             st.session_state.num_results = num_results
@@ -331,20 +337,22 @@ def main():
         else:
             st.session_state.num_results = num_results
         st.markdown("---")
-        
+
         # Rebuild index button
         if st.button("🔄 Reconstruire l'Index", type="secondary", use_container_width=True):
             # Set rebuild flag in config to trigger rebuild on Accueil page
             config = load_app_config()
             config['rebuild_index'] = True
             if save_app_config(config):
-                st.success("✅ L'index sera reconstruit automatiquement sur la page d'accueil.")
+                st.success(
+                    "✅ L'index sera reconstruit automatiquement sur la page d'accueil.")
             else:
-                st.error("❌ Erreur lors de la sauvegarde de la configuration de reconstruction.")
+                st.error(
+                    "❌ Erreur lors de la sauvegarde de la configuration de reconstruction.")
             st.rerun()
-        
+
         st.markdown("---")
-        
+
         # Logout button
         if st.button("🚪 Se déconnecter", type="secondary", use_container_width=True):
             st.session_state.admin_authenticated = False
@@ -360,8 +368,6 @@ def main():
         st.warning(
             "📂 Aucun dataset trouvé. Le dossier 'dataset' est vide ou n'existe pas.")
         return
-
-    
 
     st.markdown("---")
 
@@ -470,11 +476,11 @@ def main():
                     (entry for entry in metadata if entry['label'] == edit_label), None)
                 if edit_entry:
                     edit_new_label = st.text_input(
-                        "Nouveau Label", value=edit_entry['label'], key="edit_label")
+                        "Nouveau Label", value=edit_entry['label'], key=f"edit_label_{edit_label}")
                     edit_new_roulette = st.text_input(
-                        "Nouvelle URL Roulette", value=edit_entry['url-roulette'], key="edit_roulette")
+                        "Nouvelle URL Roulette", value=edit_entry['url-roulette'], key=f"edit_roulette_{edit_label}")
                     edit_new_kit = st.text_input(
-                        "Nouvelle URL Kit", value=edit_entry['url-kit'], key="edit_kit")
+                        "Nouvelle URL Kit", value=edit_entry['url-kit'], key=f"edit_kit_{edit_label}")
 
                     if st.button("✏️ Modifier Métadonnée", key="edit_metadata"):
                         if edit_new_label and edit_new_roulette and edit_new_kit:
@@ -501,18 +507,37 @@ def main():
     # Display current metadata
     if metadata:
         st.markdown("**Métadonnées actuelles :**")
+
+        # Add header row
+        cols_header = st.columns([0.5, 2, 4, 4, 1])
+        with cols_header[0]:
+            st.markdown("**#**")
+        with cols_header[1]:
+            st.markdown("**Label**")
+        with cols_header[2]:
+            st.markdown("**URL Roulette**")
+        with cols_header[3]:
+            st.markdown("**URL Kit**")
+        with cols_header[4]:
+            st.markdown("**Action**")
+
+        st.markdown("---")
+
+        # Display table rows with delete buttons
         for i, entry in enumerate(metadata):
-            col1, col2, col3, col4 = st.columns([2, 3, 3, 1])
-            with col1:
-                st.text(f"Label: {entry['label']}")
-            with col2:
-                st.text(f"Roulette: {entry['url-roulette']}")
-            with col3:
-                st.text(f"Kit: {entry['url-kit']}")
-            with col4:
-                if st.button("🗑️", key=f"del_meta_{i}_{entry['label']}", help="Supprimer cette entrée"):
+            cols = st.columns([0.5, 2, 4, 4, 1])
+            with cols[0]:
+                st.markdown(f"{i + 1}")
+            with cols[1]:
+                st.text(entry['label'])
+            with cols[2]:
+                st.text(entry['url-roulette'])
+            with cols[3]:
+                st.text(entry['url-kit'])
+            with cols[4]:
+                if st.button("🗑️", key=f"del_meta_{i}_{entry['label']}", help=f"Supprimer {entry['label']}"):
                     if delete_metadata_entry_by_index(i):
-                        st.success(f"✅ Métadonnée {entry['label']} supprimée!")
+                        st.success(f"✅ Del {entry['label']}")
                         time.sleep(2)
                         st.rerun()
                     else:
@@ -614,14 +639,16 @@ def main():
 
     # Password Management Section
     st.markdown("### 🔐 Gestion du Mot de Passe")
-    
+
     col1, col2 = st.columns([1, 1])
-    
+
     with col1:
         st.markdown("**Changer le mot de passe :**")
-        new_password = st.text_input("Nouveau mot de passe", type="password", key="new_pass")
-        confirm_password = st.text_input("Confirmer le nouveau mot de passe", type="password", key="confirm_pass")
-        
+        new_password = st.text_input(
+            "Nouveau mot de passe", type="password", key="new_pass")
+        confirm_password = st.text_input(
+            "Confirmer le nouveau mot de passe", type="password", key="confirm_pass")
+
         if st.button("🔑 Changer le Mot de Passe", key="change_password"):
             if not new_password or not confirm_password:
                 st.error("❌ Veuillez remplir tous les champs.")
@@ -634,20 +661,22 @@ def main():
                     st.rerun()
                 else:
                     st.error("❌ Erreur lors de la sauvegarde du mot de passe.")
-    
+
     with col2:
         st.markdown("**Supprimer le mot de passe :**")
-        st.warning("⚠️ Supprimer le mot de passe rendra la page d'administration accessible à tous.")
-        
+        st.warning(
+            "⚠️ Supprimer le mot de passe rendra la page d'administration accessible à tous.")
+
         if st.button("🗑️ Supprimer le Mot de Passe", key="remove_password"):
             config['admin_password'] = ""
             if save_app_config(config):
-                st.success("✅ Mot de passe supprimé. La page est maintenant accessible sans authentification.")
+                st.success(
+                    "✅ Mot de passe supprimé. La page est maintenant accessible sans authentification.")
                 st.session_state.admin_authenticated = False
                 st.rerun()
             else:
                 st.error("❌ Erreur lors de la suppression du mot de passe.")
-    
+
     st.markdown("---")
 
     # Display current structure at the very bottom
