@@ -220,8 +220,7 @@ def main():
         st.markdown(
             "2. L'application trouvera les articles de bagage les plus similaires")
         st.markdown("3. Les résultats sont classés par score de similarité")
-        st.markdown(
-            "4. Utilisez 'Reconstruire l'Index' après avoir modifié le dataset")
+        
 
     # Check if rebuild is needed from config
     config = load_app_config()
@@ -289,7 +288,7 @@ def main():
         if st.button("📋 Voir un exemple de bonne photo", type="secondary", use_container_width=True):
             st.session_state.show_example = not st.session_state.get(
                 'show_example', False)
-
+        
         # Show example image if button was clicked
         if st.session_state.get('show_example', False):
             try:
@@ -297,15 +296,17 @@ def main():
                 st.image(
                     example_image, caption="Exemple de bonne photo - Article sur fond uni", use_container_width=True)
                 
-                st.markdown("""
+                
+            except FileNotFoundError:
+                st.warning("⚠️ Fichier d'exemple non trouvé.")
+        
+        st.markdown("""
                 <div style="text-align: center; margin-top: 1rem; padding: 1rem; background-color: #f0f8f0; border-radius: 10px; border-left: 5px solid #2e8b57;">
                     <p style="margin: 0; color: #2e8b57; font-size: 1rem;">
                         Si les propositions ne correspondent pas à votre pièce, merci de nous envoyer votre demande via notre formulaire de contact <a href="https://support.jereparemonbagage.com/hc/fr/requests/new" target="_blank" style="color: #1f77b4; text-decoration: none; font-weight: bold;">en cliquant ici</a>.
                     </p>
                 </div>
                 """, unsafe_allow_html=True)
-            except FileNotFoundError:
-                st.warning("⚠️ Fichier d'exemple non trouvé.")
 
     with col2:
         st.header("🔍 Résultats de Recherche")
