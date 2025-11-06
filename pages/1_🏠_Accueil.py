@@ -5,15 +5,27 @@ import clip
 import faiss
 import numpy as np
 import streamlit as st
+import streamlit.components.v1 as components
 import torch
 from PIL import Image
 
 # Page configuration
 st.set_page_config(
     page_title="🔧 Vous ne savez pas quelle roulette, cadenas, poignée correspond à votre valise ?",
-    page_icon="🔧",
+    page_icon="public/images/logo.ico",
     layout="wide"
 )
+
+# Google Analytics
+components.html("""
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CMC9LG22K4"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-CMC9LG22K4');
+</script>
+""", height=0)
 
 # Custom CSS for better styling
 st.markdown("""
@@ -211,7 +223,8 @@ def main():
     with st.sidebar:
         # Get number of results from persistent config, fallback to session state, then default to 3
         config = load_app_config()
-        num_results = config.get('num_results', st.session_state.get('num_results', 3))
+        num_results = config.get(
+            'num_results', st.session_state.get('num_results', 3))
         # Update session state with the persistent value
         st.session_state.num_results = num_results
         st.markdown("### Instructions")
@@ -220,18 +233,17 @@ def main():
         st.markdown(
             "2. L'application trouvera les articles de bagage les plus similaires")
         st.markdown("3. Les résultats sont classés par score de similarité")
-        
 
     # Check if rebuild is needed from config
     config = load_app_config()
     rebuild_needed = config.get('rebuild_index', False)
-    
+
     # Initialize session state - build index if not cached or rebuild is needed
     if 'index' not in st.session_state or 'ids' not in st.session_state or rebuild_needed:
         if rebuild_needed:
             print("Rebuilding index due to admin request")
             st.info("🔄 Reconstruction de l'index demandée par l'administration...")
-            
+
             # Clear all cached data
             if 'index' in st.session_state:
                 del st.session_state.index
@@ -240,11 +252,11 @@ def main():
 
             # Clear the cached build_faiss_index function
             build_faiss_index.clear()
-            
+
             # Clear the rebuild flag
             config['rebuild_index'] = False
             save_app_config(config)
-     
+
         with st.spinner("Chargement du modèle et construction de l'index..."):
             index, ids = build_faiss_index()
             if index is not None:
@@ -288,18 +300,17 @@ def main():
         if st.button("📋 Voir un exemple de bonne photo", type="secondary", use_container_width=True):
             st.session_state.show_example = not st.session_state.get(
                 'show_example', False)
-        
+
         # Show example image if button was clicked
         if st.session_state.get('show_example', False):
             try:
                 example_image = Image.open("sample/good.webp")
                 st.image(
                     example_image, caption="Exemple de bonne photo - Article sur fond uni", use_container_width=True)
-                
-                
+
             except FileNotFoundError:
                 st.warning("⚠️ Fichier d'exemple non trouvé.")
-        
+
         st.markdown("""
                 <div style="text-align: center; margin-top: 1rem; padding: 1rem; background-color: #f0f8f0; border-radius: 10px; border-left: 5px solid #2e8b57;">
                     <p style="margin: 0; color: #2e8b57; font-size: 1rem;">
@@ -400,9 +411,8 @@ def main():
     st.markdown("### 📊 Informations sur le Dataset")
     if 'ids' in st.session_state:
         total_images = len(st.session_state.ids)
-        st.metric(f"Le modèle utilise pour la recherche de similarité un total d'images :" , total_images)
-
-        
+        st.metric(
+            f"Le modèle utilise pour la recherche de similarité un total d'images :", total_images)
 
 
 if __name__ == "__main__":

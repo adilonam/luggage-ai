@@ -15,7 +15,6 @@ services:
     networks:
       - luggage-prod-network
 
-
   nginx:
     image: nginx:alpine
     container_name: luggage-ai-nginx-prod
@@ -26,6 +25,7 @@ services:
     volumes:
       - ./nginx/nginx-prod.conf:/etc/nginx/nginx.conf:ro
       - ./ssl:/etc/nginx/ssl:ro
+      - ./static:/app/static:ro
     depends_on:
       - luggage-ai
     networks:

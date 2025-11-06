@@ -27,3 +27,8 @@
 - [x] dataset en dessous
 - [x] model entrainer sur 1056
 - [x] si la photo ne corspond pas lien fiverr 
+
+
+- [x] add logo 
+- [x] add analytics google 
+- [x] add robots.txt and sitmap
