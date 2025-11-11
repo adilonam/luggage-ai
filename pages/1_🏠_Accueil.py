@@ -16,20 +16,17 @@ st.set_page_config(
     layout="wide"
 )
 
-# Meta description
-components.html("""
-<script>
-(function() {
-  var targetDoc = (window.parent && window.parent !== window) ? window.parent.document : document;
-  if (!targetDoc.querySelector('meta[name="description"]')) {
-    var meta = targetDoc.createElement('meta');
-    meta.name = 'description';
-    meta.content = 'Trouvez la bonne roulette, poignée ou serrure pour votre valise grâce à notre IA. Service rapide, gratuit et 100 % français.';
-    targetDoc.head.appendChild(meta);
-  }
-})();
-</script>
-""", height=0)
+# Add custom meta tags (SEO + OpenGraph)
+st.markdown("""
+<head>
+    <meta name="description" content="Trouvez la bonne roulette, poignée ou serrure pour votre valise grâce à notre IA. Service rapide, gratuit et 100 % français.">
+    <meta property="og:title" content="Reconnaissance IA de Roulettes & Pièces Valises – Roulettesdevalise.com">
+    <meta property="og:description" content="Trouvez la bonne roulette, poignée ou serrure pour votre valise grâce à notre IA. Service rapide, gratuit et 100 % français.">
+    <meta property="og:url" content="https://www.roulettesdevalise.com">
+    <meta property="og:image" content="https://www.roulettesdevalise.com/static/preview.jpg">
+    <meta name="robots" content="index, follow">
+</head>
+""", unsafe_allow_html=True)
 
 # Google Analytics
 components.html("""
