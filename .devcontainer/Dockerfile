@@ -28,6 +28,10 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install -r requirements.txt
 
+# Copy and run script to patch Streamlit HTML for SEO
+COPY patch_streamlit_html.py /tmp/patch_streamlit_html.py
+RUN python3 /tmp/patch_streamlit_html.py && rm /tmp/patch_streamlit_html.py
+
 # Expose Streamlit port
 EXPOSE 8501
 
