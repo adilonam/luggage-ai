@@ -13,7 +13,7 @@ from PIL import Image
 # Page configuration
 st.set_page_config(
     page_title="Reconnaissance IA de Roulettes & Pièces Valises – Roulettesdevalise.com",
-    page_icon="public/images/logo.ico",
+    page_icon="public/images/favicon.ico",
     layout="wide"
 )
 

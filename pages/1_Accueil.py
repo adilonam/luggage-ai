@@ -11,7 +11,7 @@ from PIL import Image
 # Page configuration
 st.set_page_config(
     page_title="Reconnaissance IA de Roulettes & Pièces Valises – Roulettesdevalise.com",
-    page_icon="public/images/logo.ico",
+    page_icon="public/images/favicon.ico",
     layout="wide"
 )
 
@@ -329,7 +329,7 @@ def main():
                         # Search more results
                         search_k = min(50, len(st.session_state.ids))
                         # FAISS search returns distances and indices
-                        D, I = st.session_state.index.search(q_emb.astype(
+                        D, I = st.session_state.index.search(q_emb.astype( # pylint: disable=no-value-for-parameter
                             'float32'), search_k)  # pylint: disable=no-value-for-parameter
 
                         # Get unique article IDs with their best scores

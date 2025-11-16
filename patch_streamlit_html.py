@@ -21,7 +21,7 @@ content = re.sub(r'<html lang="en">', '<html lang="fr">', content)
 # Update favicon link
 content = re.sub(
     r'<link rel="shortcut icon" href="[^"]*" />',
-    '<link rel="shortcut icon" href="public/images/logo.ico" />',
+    '<link rel="shortcut icon" href="/favicon.ico" />',
     content
 )
 
@@ -91,4 +91,3 @@ with open(STREAMLIT_HTML, 'w', encoding='utf-8') as f:
     f.write(content)
 
 print(f"Successfully patched {STREAMLIT_HTML}")
-
